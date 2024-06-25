@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import time
 
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction
@@ -17,21 +18,22 @@ except ImportError:
         "`tornado` and `requests` installed."
     )
 
-NumOfIter = 40
-ParaInput = {"x": (-4, 4), "y": (-3, 3), "z": (-5, 5)}
+NumOfIter = 30
+# ParaInput = {"N": (-4, 4), "NBs": (-3, 3), "NBMIN": (-5, 5), "BCAST": (0, 7)}
+ParaInput = {"N": (-4, 4), "NBs": (-3, 3), "NBMIN": (-5, 5), "BCAST": (0, 7)}
 Kappa = 3
 Xi = 1
 
 
-def black_box_function(x, y, z):
+def black_box_function(N, NBs, NBMIN, BCAST):
     """Function with unknown internals we wish to maximize.
 
     This is just serving as an example, however, for all intents and
     purposes think of the internals of this function, i.e.: the process
     which generates its outputs values, as unknown.
     """
-    # time.sleep(random.randint(1, 7))
-    return -x ** 2 - (y - 1) ** 2 + 1 + z
+    time.sleep(0.2)
+    return N+NBs-NBMIN**2+BCAST**2
 
 
 class BayesianOptimizationHandler(RequestHandler):
@@ -107,6 +109,7 @@ def run_optimizer():
 
 
 if __name__ == "__main__":
+
     ioloop = tornado.ioloop.IOLoop.instance()
     optimizers_config = [
         {"name": "HPL Optimizer", "colour": Fore.GREEN},

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import threading
 import time
 
@@ -6,7 +7,7 @@ import time
 import re
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction
-from colorama import Fore
+# from colorama import Fore
 
 import ClusterInfo
 import RunHPL
@@ -46,8 +47,8 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     HPL_value = 20
 
     # read HPL's max mem --------------------------------
-    N_max = 130000
-    N_min = 20000
+    N_max = 180000
+    N_min = 60000
 
     NBs_max = 512
     NBs_min = 10
@@ -78,23 +79,33 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
                 if param_name == 'NBs_max':
                     NBs_max = param_value
 
-                print(f"Parameter {param_name}: {param_value}")
+                # print(f"Parameter {param_name}: {param_value}")
                 parameters[param_name] = param_value
 
     # calculate HPL's para -----------------------------
-    next_N = round(N_min + (N_max - N_min) * N_rate)
-    next_NBs = round(NBs_min + (NBs_max - NBs_min) * NBs_rate)
+
+    if 100 - N_rate < 2:
+        print("need bigger max_N!")
+        N_max += 5000
+
+    next_N = round(N_min + ((N_max - N_min) * N_rate) / 100)
+    next_NBs = round(NBs_min + ((NBs_max - NBs_min) * NBs_rate) / 100)
     next_NBmin = round(NBMIN)
     next_BCAST = round(BCAST)
 
+    print("next_N:", next_N)
+    print("next_NBs:", next_NBs)
+    print("next_NBmin:", next_NBmin)
+    print("next_BCAST:", next_BCAST)
+
     # write HPL.dat ------------------------------------
     # 将修改后的参数写回文件
-    with open(file_path+'/HPL.dat', 'r+') as file:
+    with open(file_path + '/HPL.dat', 'r+') as file:
         lines = file.readlines()
-        lines[5] = str(next_N)
-        lines[7] = str(next_NBs)
-        lines[16] = str(next_NBmin)
-        lines[22] = str(next_BCAST)
+        lines[5] = str(next_N) + "         Ns\n"
+        lines[7] = str(next_NBs) + "          NBs\n"
+        lines[16] = str(next_NBmin) + "          NBMINs (>= 1)\n"
+        lines[22] = str(next_BCAST) + "            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM)" + "\n"
         # 将更新后的内容写回文件
         file.seek(0)  # 将文件指针移到文件开头
         file.writelines(lines)  # 将修改后的内容写回文件
@@ -107,13 +118,21 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     RunHPL.hpl()
 
     # wait for complete
-    time.sleep(WAITING_TIME)
+    # time.sleep(WAITING_TIME)
+
+    #-- For multi process, this is not good since bjobs may find other thread's process --#
+    for i in range(10):
+        res = os.popen(f"bjobs").readlines()
+        if len(res) >= 1:
+            time.sleep(10)
+        else:
+            break
 
     # read and return result  ---------------------------
     isPassed = False
 
     # 打开文件并查找包含 "PASSED" 的行
-    with open(file_path+'/bayes.txt', 'r') as file2:
+    with open(file_path + '/bayes.txt', 'r') as file2:
         for line in file2:
             if 'PASSED' in line:
                 isPassed = True
@@ -178,10 +197,8 @@ def run_optimization_app():
 
 
 def run_optimizer():
-    global optimizers_config
-    config = optimizers_config.pop()
-    name = config["name"]
-    colour = config["colour"]
+    name = "HPL Optimizer"
+    # colour = Fore.GREEN
 
     register_data = {}
     max_target = None
@@ -204,15 +221,15 @@ def run_optimizer():
 
         status += name + " got {} as target.\n".format(target)
         status += name + " will to register next: {}.\n".format(register_data)
-        print(colour + status, end="\n")
+        print(status, end="\n")
 
     global results
     results.append((name, max_target))
-    print(colour + name + " is done!", end="\n\n")
+    print(name + " is done!", end="\n\n")
 
 
 def run_on_single_node(node_name):
-    print("welcome to bayesian_optimization on HPL at node {}\n".format(node_name))
+    print("Try to run bayesian optimization on HPL at node {}\n".format(node_name))
 
     # Find cpu info
     ClusterInfo.cpu_info(node_name)
@@ -226,11 +243,21 @@ def run_on_single_node(node_name):
     # Change node
     RunHPL.change_hpl_node(node_name, cpu_cores)
 
+    P, Q = RunHPL.find_closest_factors(cpu_cores)
+    # write HPL.dat ------------------------------------
+    # 将修改后的参数写回文件
+    with open(file_path + '/HPL.dat', 'r+') as file:
+        lines = file.readlines()
+        lines[10] = str(P) + "            Ps\n"
+        lines[11] = str(Q) + "            Qs\n"
+
+        # 将更新后的内容写回文件
+        file.seek(0)  # 将文件指针移到文件开头
+        file.writelines(lines)  # 将修改后的内容写回文件
+        file.truncate()  # 截断文件，删除原有内容之后的部分（如果有）
+
     # Run bayesian
     ioloop = tornado.ioloop.IOLoop.instance()
-    optimizers_config = [
-        {"name": "HPL Optimizer", "colour": Fore.GREEN},
-    ]
 
     app_thread = threading.Thread(target=run_optimization_app)
     app_thread.daemon = True
@@ -255,7 +282,6 @@ def run_on_single_node(node_name):
     ioloop.stop()
 
 
-
 if __name__ == "__main__":
 
     print("welcome to bayesian_optimization on HPL")
@@ -265,7 +291,7 @@ if __name__ == "__main__":
 
     ioloop = tornado.ioloop.IOLoop.instance()
     optimizers_config = [
-        {"name": "HPL Optimizer", "colour": Fore.GREEN},
+        {"name": "HPL Optimizer"},
     ]
 
     app_thread = threading.Thread(target=run_optimization_app)

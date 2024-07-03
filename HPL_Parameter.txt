@@ -1,4 +1,4 @@
-N_max 130000
-N_min 20000
+N_max 150000
+N_min 60000
 NBs_max 512
 NBs_min 10

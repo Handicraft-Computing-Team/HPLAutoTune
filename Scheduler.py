@@ -1,8 +1,8 @@
-import os
+import bayes_optM
 
+node = "b07u25a"
 
-def open_avail_lists():
+if __name__ == "__main__":
 
-    # queues
-    os.system('bqueues >> queues.txt')
-    file = open("queues.txt", "r")
+    print("welcome to bayesian_optimization on HPL")
+    bayes_optM.run_on_single_node(node)

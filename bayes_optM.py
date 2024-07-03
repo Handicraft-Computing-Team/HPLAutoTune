@@ -8,6 +8,7 @@ from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction
 from colorama import Fore
 
+import ClusterInfo
 import RunHPL
 
 try:
@@ -24,9 +25,10 @@ except ImportError:
 
 # hyper parameter
 Number_of_iter = 30
-file_path = '/testing'
-WAITING_TIME = 0.2
+file_path = '/work/ssc-laihb/haibin/hpl-2.3/testing'
+WAITING_TIME = 320
 COMPILE_TIME = 60
+LSF_TIME = 10
 
 # for bayesian
 Kappa = 3
@@ -80,8 +82,8 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
                 parameters[param_name] = param_value
 
     # calculate HPL's para -----------------------------
-    next_N = N_min + (N_max - N_min) * N_rate
-    next_NBs = NBs_min + (NBs_max - NBs_min) * NBs_rate
+    next_N = round(N_min + (N_max - N_min) * N_rate)
+    next_NBs = round(NBs_min + (NBs_max - NBs_min) * NBs_rate)
     next_NBmin = round(NBMIN)
     next_BCAST = round(BCAST)
 
@@ -89,10 +91,17 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     # 将修改后的参数写回文件
     with open(file_path+'/HPL.dat', 'r+') as file:
         lines = file.readlines()
-        lines[5] = next_N
-        lines[7] = next_NBs
-        lines[16] = next_NBmin
-        lines[22] = next_BCAST
+        lines[5] = str(next_N)
+        lines[7] = str(next_NBs)
+        lines[16] = str(next_NBmin)
+        lines[22] = str(next_BCAST)
+        # 将更新后的内容写回文件
+        file.seek(0)  # 将文件指针移到文件开头
+        file.writelines(lines)  # 将修改后的内容写回文件
+        file.truncate()  # 截断文件，删除原有内容之后的部分（如果有）
+
+    # 关闭文件
+    file.close()
 
     # run ----------------------------------------------
     RunHPL.hpl()
@@ -104,14 +113,14 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     isPassed = False
 
     # 打开文件并查找包含 "PASSED" 的行
-    with open(file_path+'/bayes.txt') as file2:
-        for line in file:
+    with open(file_path+'/bayes.txt', 'r') as file2:
+        for line in file2:
             if 'PASSED' in line:
                 isPassed = True
                 print(line.strip())  # 输出包含 "PASSED" 的行，并去除首尾空白字符
 
             # 使用正则表达式查找浮点数
-            float_pattern = r"[-+]?\d*\.\d+([eE][-+]?\d+)?"
+            float_pattern = r"\d+\.\d+e[+-]\d+"
             matches = re.findall(float_pattern, line)
 
             # 取得匹配到的第一个浮点数并转换为 float
@@ -202,7 +211,54 @@ def run_optimizer():
     print(colour + name + " is done!", end="\n\n")
 
 
+def run_on_single_node(node_name):
+    print("welcome to bayesian_optimization on HPL at node {}\n".format(node_name))
+
+    # Find cpu info
+    ClusterInfo.cpu_info(node_name)
+    time.sleep(LSF_TIME)
+    cpu_cores = ClusterInfo.read_cpu_info()
+
+    # Compile
+    RunHPL.compile_hpl_node(node_name, cpu_cores)
+    time.sleep(COMPILE_TIME)
+
+    # Change node
+    RunHPL.change_hpl_node(node_name, cpu_cores)
+
+    # Run bayesian
+    ioloop = tornado.ioloop.IOLoop.instance()
+    optimizers_config = [
+        {"name": "HPL Optimizer", "colour": Fore.GREEN},
+    ]
+
+    app_thread = threading.Thread(target=run_optimization_app)
+    app_thread.daemon = True
+    app_thread.start()
+
+    targets = (
+        run_optimizer,
+    )
+    optimizer_threads = []
+    for target in targets:
+        optimizer_threads.append(threading.Thread(target=target))
+        optimizer_threads[-1].daemon = True
+        optimizer_threads[-1].start()
+
+    results = []
+    for optimizer_thread in optimizer_threads:
+        optimizer_thread.join()
+
+    for result in results:
+        print(result[0], "found a maximum value of: {}".format(result[1]))
+
+    ioloop.stop()
+
+
+
 if __name__ == "__main__":
+
+    print("welcome to bayesian_optimization on HPL")
 
     RunHPL.compile_hpl()
     time.sleep(COMPILE_TIME)

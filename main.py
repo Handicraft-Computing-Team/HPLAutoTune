@@ -4,7 +4,7 @@ import RunHPL
 
 
 def ls():
-    return os.popen('dir').readlines()
+    return os.popen('ls').readlines()
 
 print(ls())
 

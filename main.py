@@ -1,7 +1,13 @@
 import os
 
+import RunHPL
+
 
 def ls():
-    return os.popen('ls').readlines()
+    return os.popen('dir').readlines()
+
+print(ls())
+
+# RunHPL.hpl()
 
 

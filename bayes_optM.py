@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import threading
 import time
@@ -36,7 +37,7 @@ Kappa = 3
 Xi = 1
 
 
-def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
+def black_box_function(alpha_rate, NBs_rate, NBMIN, BCAST):
     """Function with unknown internals we wish to maximize.
 
     This is just serving as an example, however, for all intents and
@@ -47,8 +48,7 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     HPL_value = 20
 
     # read HPL's max mem --------------------------------
-    N_max = 180000
-    N_min = 60000
+    free_memory = 180000
 
     NBs_max = 512
     NBs_min = 10
@@ -67,8 +67,8 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
                 # 第一个部分是参数名称，第二个部分是浮点数值
                 param_name = parts[0]
                 param_value = float(parts[1])  # 转换为浮点数
-                if param_name == 'N_max':
-                    N_max = param_value
+                if param_name == 'free_memory':
+                    free_memory = param_value
 
                 if param_name == 'N_min':
                     N_min = param_value
@@ -84,11 +84,11 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
 
     # calculate HPL's para -----------------------------
 
-    if 100 - N_rate < 2:
-        print("need bigger max_N!")
-        N_max += 5000
+    if 95 - alpha_rate < 2:
+        print("May need bigger max_N!")
+        free_memory += 5000
 
-    next_N = round(N_min + ((N_max - N_min) * N_rate) / 100)
+    next_N = round(math.sqrt((free_memory * alpha_rate / 8)) / 10)
     next_NBs = round(NBs_min + ((NBs_max - NBs_min) * NBs_rate) / 100)
     next_NBmin = round(NBMIN)
     next_BCAST = round(BCAST)
@@ -120,7 +120,7 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     # wait for complete
     # time.sleep(WAITING_TIME)
 
-    #-- For multi process, this is not good since bjobs may find other thread's process --#
+    # -- For multi process, this is not good since bjobs may find other thread's process --#
     for i in range(10):
         res = os.popen(f"bjobs").readlines()
         if len(res) >= 1:
@@ -159,7 +159,7 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
 
 class BayesianOptimizationHandler(RequestHandler):
     """Basic functionality for NLP handlers."""
-    HPL_para = {"N_rate": (0, 100), "NBs_rate": (0, 100), "NBMIN": (2, 15), "BCAST": (0, 5)}
+    HPL_para = {"N_rate": (5, 95), "NBs_rate": (0, 100), "NBMIN": (2, 15), "BCAST": (0, 5)}
     _bo = BayesianOptimization(
         f=black_box_function,
         pbounds=HPL_para
@@ -242,6 +242,17 @@ def run_on_single_node(node_name):
 
     # Change node
     RunHPL.change_hpl_node(node_name, cpu_cores)
+
+    ClusterInfo.memory_size(node_name)
+    free_mem = ClusterInfo.read_memory_size()
+
+    # 输出参数到另一个文件
+    output_filename = 'HPL_Parameter.txt'
+    with open(output_filename, 'w') as output_file:
+        output_file.write(f"N_max {free_mem}\n")
+        output_file.write(f"N_min 20000\n")
+        output_file.write(f"NBs_min 32\n")
+        output_file.write(f"NBs_max 512\n")
 
     P, Q = RunHPL.find_closest_factors(cpu_cores)
     # write HPL.dat ------------------------------------

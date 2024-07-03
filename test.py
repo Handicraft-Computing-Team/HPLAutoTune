@@ -276,3 +276,11 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=max_worker) as executor:
             print(f'node {node} completed successfully')
 
 print("All testing HPL tasks completed")
+
+# 输出参数到另一个文件
+output_filename = 'HPL_Parameter.txt'
+with open(output_filename, 'w') as output_file:
+    output_file.write(f"N_max: {1342332}\n")
+    output_file.write(f"N_min: 20000\n")
+    output_file.write(f"NBs_min: 32\n")
+    output_file.write(f"NBs_max: 512\n")

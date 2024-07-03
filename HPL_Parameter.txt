@@ -1,4 +1,4 @@
-N_max 150000
-N_min 60000
-NBs_max 512
-NBs_min 10
+N_max: 1342332
+N_min: 20000
+NBs_min: 32
+NBs_max: 512

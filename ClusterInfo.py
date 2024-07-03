@@ -137,10 +137,9 @@ def read_memory_size():
 
         # 查找包含 CPU(s) 的行并解析核心数
         for line in lines:
-            if line.startswith('CPU(s):'):
-                free_memory_size = int(line)
-                print("free_memory_size", free_memory_size)
-                return free_memory_size
+            free_memory_size = int(line)
+            print("free_memory_size", free_memory_size)
+            return free_memory_size
 
         # 如果没有找到 CPU(s) 行，默认返回 None 或者适合的错误处理
         return None

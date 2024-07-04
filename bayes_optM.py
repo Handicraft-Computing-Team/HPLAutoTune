@@ -1,5 +1,6 @@
 import asyncio
 import math
+import os
 # import opentuner
 import re
 import threading
@@ -122,16 +123,16 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
     time.sleep(WAITING_TIME)
 
     # -- For multi process, this is not good since bjobs may find other thread's process --#
-    # count = 0
-    # for i in range(30):
-    #     res = os.popen(f"bjobs").readlines()
-    #     if len(res) >= 1:
-    #         time.sleep(10)
-    #     else:
-    #         time.sleep(4)
-    #         count += 1
-    #     if count == 5:
-    #         break
+    count = 0
+    for i in range(300):
+        res = os.popen(f"bjobs").readlines()
+        if len(res) >= 1:
+            time.sleep(180)
+        else:
+            time.sleep(4)
+            count += 1
+        if count == 15:
+            break
 
     # read and return result  ---------------------------
     isPassed = False

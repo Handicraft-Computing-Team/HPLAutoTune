@@ -1,0 +1,26 @@
+
+#!/bin/bash
+#BSUB -q ssc-cpu ##队列名
+#BSUB -J HPL-Test
+#BSUB -n 50
+#BSUB -e %J.err
+#BSUB -o %J.out
+#BSUB -m sadfasad
+
+hostfile=`echo $LSB_DJOB_HOSTFILE`
+NP=`cat $hostfile | wc -l`
+
+
+#cd /work/ssc-laihb/haibin/hpl-2.3
+
+source /share/intel/oneapi-2023.1/setvars.sh
+
+#make arch=Linux_Intel64 clean
+
+#./configure
+
+#make arch=Linux_Intel64
+
+cd /work/ssc-laihb/haibin/hpl-2.3/testing
+
+mpirun -np $NP ./xhpl >> bayes.txt

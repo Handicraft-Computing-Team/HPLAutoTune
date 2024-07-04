@@ -28,7 +28,7 @@ optimization on one node with **N** iteration. On each iteration, we run HPL on 
 node of the cluster and take the PFLOPS as the target function, then the optimizer will  
 try to maximize it.
 
-At the end of the optimization, we will output the best group of solution with the best result.
+At the end of the optimization, the system output the best group of solution with the best result.
 ![alt text](picture/Framework.png)
 
 ## Parallel Working

@@ -4,6 +4,7 @@
 #### Haibin Lai, Student Assistant 12211612@mail.sustech.edu.cn
 ### 
 
+## Introduction
 
 The High Performance Linpack (HPL) benchmark[4] is utilized to assess 
 the floating-point performance of clusters and serves as 
@@ -14,13 +15,34 @@ Achieving peak performance involves tuning approximately fifteen parameters,
 such as matrix block sizes and algorithmic settings.
 
 In this project, we applied **Bayesian optimization** **(BO)** to tune a
- CPU node inside a cluster system for the benchmark.
+ CPU node inside a cluster system for the benchmark. Bayesian optimization is a 
+fast and rapid optimization method on tuning the hyperparameter of a software.
 
-The following figure displays the main framework of the Tuning System 
+## Framework
+
+The following figure displays the main framework of the Tuning System. 
+
+We determine the starting point using
+empirical formula by detecting the size of memory and the number and performance of cores. Then we run bayesian 
+optimization on one node with **N** iteration. On each iteration, we run HPL on the client
+node of the cluster and take the PFLOPS as the target function, then the optimizer will  
+try to maximize it.
+
+At the end of the optimization, we will output the best group of solution with the best result.
 ![alt text](picture/Framework.png)
 
+## Parallel Working
+
+The optimization system can also run with several thread, where it take a signal node as mission. So by sending a 
+list to the system, it will submit it and solve them automatically.
+
+![alt text](picture/Running.png)
 
 
+## Future Work
+
+Since the component of HPL can be changed, we can apply HPL's GPU version like [1] to the system. Also, HPCG
+has been a rapid growing testing software in recent years. These can also be applied to the system. 
 
 ## Reference 
 [1] iyazaki, T., Sato, I., Shimizu, N. (2018). Bayesian Optimization of HPC Systems for Energy Efficiency. In: Yokota, R., Weiland, M., Keyes, D., Trinitis, C. (eds) High Performance Computing. ISC High Performance 2018. Lecture Notes in Computer Science(), vol 10876. Springer, Cham. https://doi.org/10.1007/978-3-319-92040-5_3

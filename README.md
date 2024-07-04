@@ -1,8 +1,8 @@
-# Auto Tuning HPL on Qiming and Taiyi Cluster
+# Auto Tuning HPL on Qiming and Taiyi Cluster using Bayesian Optimization
 
 ## SUSTech CCSE
-### Haibin Lai
-### 12211612
+### Haibin Lai, Student Assistant
+### 
 
 
-
+![alt text](Framework.png)

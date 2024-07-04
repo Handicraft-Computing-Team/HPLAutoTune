@@ -147,3 +147,7 @@ def read_memory_size():
     except Exception as e:
         print(f"Error occurred while reading {file_name}: {str(e)}")
         return None
+
+
+def clean_output():
+    os.popen('rm /work/ssc-laihb/haibin/hpl-2.3/testing/bayes.txt')

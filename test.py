@@ -284,3 +284,14 @@ with open(output_filename, 'w') as output_file:
     output_file.write(f"N_min: 20000\n")
     output_file.write(f"NBs_min: 32\n")
     output_file.write(f"NBs_max: 512\n")
+
+
+
+
+
+import math
+
+free_memory = 182226588
+alpha_rate = 95
+a = round(math.sqrt((free_memory * 1024 * alpha_rate / 8)) / 10)
+print(a)

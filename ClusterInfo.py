@@ -63,7 +63,7 @@ def cpu_info(node_name):
 
 
 def read_cpu_info():
-    file_name = 'cpu.txt'
+    file_name = 'cpu_info.txt'
     try:
         # 打开文件并读取内容
         with open(file_name, 'r') as f:
@@ -150,4 +150,7 @@ def read_memory_size():
 
 
 def clean_output():
-    os.popen('rm /work/ssc-laihb/haibin/hpl-2.3/testing/bayes.txt')
+    try:
+        os.popen('rm /work/ssc-laihb/haibin/hpl-2.3/testing/bayes.txt')
+    except Exception as e:
+        print(f"No output for: {str(e)}")

@@ -30,7 +30,7 @@ Number_of_iter = 30
 file_path = '/work/ssc-laihb/haibin/hpl-2.3/testing'
 WAITING_TIME = 320
 COMPILE_TIME = 60
-LSF_TIME = 10
+LSF_TIME = 20
 
 # for bayesian
 Kappa = 3

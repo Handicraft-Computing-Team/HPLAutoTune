@@ -6,7 +6,7 @@ import bayes_optM
 def ma():
     HPL_value = 20
     # 打开文件并查找包含 "PASSED" 的行
-    with open('bayes.txt', 'r') as file2:
+    with open('../bayes.txt', 'r') as file2:
         for line in file2:
             if 'PASSED' in line:
                 isPassed = True
@@ -76,7 +76,7 @@ print("All testing tasks completed")
 parameters = {}
 #
 # # 打开文件
-with open('HPL_Parameter.txt', 'r') as file:
+with open('../HPL_Parameter.txt', 'r') as file:
     # 逐行读取文件内容
     for line in file:
         # 去除行末尾的换行符并按空格分割
@@ -188,7 +188,7 @@ mpirun -np $NP ./xhpl >> bayes.txt
 
 def change_hpl_node(node_name, cpu_cores):
     # the file that submit the hpl program
-    file_name = 'hpl.lsf'
+    file_name = '../hpl.lsf'
     # 打开文件并写入内容
     with open(file_name, 'w') as f:
         f.write(hpl_lsf_content)
@@ -278,7 +278,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=max_worker) as executor:
 print("All testing HPL tasks completed")
 
 # 输出参数到另一个文件
-output_filename = 'HPL_Parameter.txt'
+output_filename = '../HPL_Parameter.txt'
 with open(output_filename, 'w') as output_file:
     output_file.write(f"N_max: {1342332}\n")
     output_file.write(f"N_min: 20000\n")

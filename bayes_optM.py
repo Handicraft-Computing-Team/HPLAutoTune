@@ -1,17 +1,17 @@
 import asyncio
 import math
-import os
+# import opentuner
+import re
 import threading
 import time
 
-# import opentuner
-import re
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction
-# from colorama import Fore
 
 import ClusterInfo
 import RunHPL
+
+# from colorama import Fore
 
 try:
     import json
@@ -85,7 +85,7 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
 
     # calculate HPL's para -----------------------------
 
-    if 98 - alpha_rate < 2:
+    if 100 - alpha_rate < 2:
         print("May need bigger max_N!")
         # alpha_rate += 2
 
@@ -135,6 +135,9 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
 
     # read and return result  ---------------------------
     isPassed = False
+    results = []
+    # 使用正则表达式查找浮点数
+    float_pattern = r"\d+\.\d+e[+-]\d+"
 
     # 打开文件并查找包含 "PASSED" 的行
     with open(file_path + '/bayes.txt', 'r') as file2:
@@ -143,28 +146,31 @@ def black_box_function(N_rate, NBs_rate, NBMIN, BCAST):
                 isPassed = True
                 print(line.strip())  # 输出包含 "PASSED" 的行，并去除首尾空白字符
 
-            # 使用正则表达式查找浮点数
-            float_pattern = r"\d+\.\d+e[+-]\d+"
             matches = re.findall(float_pattern, line)
 
             # 取得匹配到的第一个浮点数并转换为 float
             if matches:
-                float_value = float(matches[-1])
+                float_value = float(matches[0])
+
                 if HPL_value < float_value:
-                    HPL_value = float_value
-                    print(HPL_value)  # 输出转换后的浮点数
+                    # 将所有匹配项添加到结果列表中
+                    results.append(float_value)
+
 
     # Result -----------------------------------------------
     # return N_rate**2+N_rate*NBs_rate-NBMIN**2+BCAST**2
     if isPassed:
+        HPL_value = (results[-1])
+        print("last HPL value:", HPL_value)  # 输出转换后的浮点数
         return HPL_value
     else:
+        print("HPL DID NOT PASSED")
         return 0
 
 
 class BayesianOptimizationHandler(RequestHandler):
     """Basic functionality for NLP handlers."""
-    HPL_para = {"N_rate": (80, 98), "NBs_rate": (0, 100), "NBMIN": (2, 15), "BCAST": (0, 5)}
+    HPL_para = {"N_rate": (80, 100), "NBs_rate": (0, 100), "NBMIN": (2, 15), "BCAST": (0, 5)}
     _bo = BayesianOptimization(
         f=black_box_function,
         pbounds=HPL_para

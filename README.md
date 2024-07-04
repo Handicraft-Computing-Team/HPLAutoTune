@@ -31,6 +31,14 @@ try to maximize it.
 At the end of the optimization, the system output the best group of solution with the best result.
 ![alt text](picture/Framework.png)
 
+
+The communication framework works like RPC(Remote Procedure Call). The program that run optimization on process A at server send process
+B which run HPL on client. Then process A wait until process B is finished. After that, A continues to optimize
+the parameter.
+
+![alt text](picture/RPC.png)
+
+
 ## Parallel Working
 
 The optimization system can also run with several thread, where it take a signal node as mission. So by sending a 

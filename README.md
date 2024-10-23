@@ -2,6 +2,7 @@
 
 ## SUSTech CCSE
 #### Haibin Lai, Student Assistant 12211612@mail.sustech.edu.cn
+#### Junjie Qiu, Student Assistant 12111831@mail.sustech.edu.cn
 ### 
 
 ## Introduction
